@@ -12,7 +12,7 @@ if DEV:
 else:
     import CHIP_IO.GPIO as GPIO
 
-window = pg.window.Window()
+window = pg.window.Window(fullscreen=True)
 
 resolution_str = str(window.width)+'x'+str(window.height)
 print("Resolution:", resolution_str)
