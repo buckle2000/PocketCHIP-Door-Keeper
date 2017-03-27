@@ -13,8 +13,16 @@ if DEV:
         pass
 else:
     import CHIP_IO.GPIO as GPIO
+
+def atexit_callback():
+    if not DEV:
+        GPIO.cleanup()
+atexit.register(atexit_callback)
+    
+if not DEV:
     GPIO.setup("GPIO3", GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup("GPIO6", GPIO.OUT)
+
 # IPython.embed()
 
 window = pg.window.Window(fullscreen=True)
@@ -71,8 +79,3 @@ if not DEV:
     GPIO.add_event_detect("GPIO3", GPIO.FALLING, open_sesame)
 
 pg.app.run()
-
-atexit.register(atexit_callback)
-def atexit_callback():
-    if not DEV:
-        GPIO.cleanup()
