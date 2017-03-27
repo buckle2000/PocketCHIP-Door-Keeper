@@ -1,6 +1,8 @@
 import sys
+import atexit
 import requests
 import pyglet as pg
+
 
 DEV = sys.platform == 'win32'
 
@@ -54,9 +56,9 @@ def open_sesame(*args):
     if not DEV:
         GPIO.output("GPIO6", GPIO.HIGH)
     str_door = "opening"
-    pg.clock.schedule(close_sesame, 1.) # supply current for 1s
+    pg.clock.schedule_once(close_sesame, 1.) # supply current for 1s
     
-def close_sesame():
+def close_sesame(*args):
     global str_door
     str_door = "closing"
     if not DEV:
@@ -70,5 +72,7 @@ if not DEV:
 
 pg.app.run()
 
-if not DEV:
-    GPIO.cleanup()
+atexit.register(atexit_callback)
+def atexit_callback():
+    if not DEV:
+        GPIO.cleanup()
