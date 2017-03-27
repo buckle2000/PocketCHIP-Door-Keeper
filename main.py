@@ -1,7 +1,7 @@
 import sys
 import atexit
-import requests
 import pyglet as pg
+from requests_futures.sessions import FuturesSession
 
 
 DEV = sys.platform == 'win32'
@@ -18,14 +18,16 @@ def atexit_callback():
     if not DEV:
         GPIO.cleanup()
 atexit.register(atexit_callback)
-    
+
 if not DEV:
     GPIO.setup("GPIO3", GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup("GPIO6", GPIO.OUT)
 
 # IPython.embed()
 
-window = pg.window.Window(fullscreen=True)
+requests_session = FuturesSession()
+
+window = pg.window.Window(fullscreen=not DEV)
 
 str_resolution = str(window.width)+'x'+str(window.height)
 label_resolution = pg.text.Label(str_resolution)
@@ -55,8 +57,23 @@ def update(dt):
         str_btndown = "Yes"
     label_info.text = str_format.format(door=str_door, network=str_network, btndown=str_btndown)
 
+def network_callback(sess,resp):
+    global str_network
+    str_network = str(resp.status_code)
+    if resp.status_code == 404:
+        pg.clock.schedule_once(update_network, 1.)
+        return
+    elif resp.status_code == 200:
+        open_sesame()
+    elif resp.status_code == 204:
+        pass # do nothing
+    else:
+        str_network = str(resp.status_code)
+        return
+    pg.clock.schedule_once(update_network, 1.)
+
 def update_network(dt):
-    pass  # TODO
+    requests_session.get('http://pacific-harbor-49025.herokuapp.com/delete/arduino', background_callback=network_callback)
 
 def open_sesame(*args):
     global str_door
@@ -74,7 +91,7 @@ def close_sesame(*args):
 
 pg.clock.set_fps_limit(60)
 pg.clock.schedule(update)
-pg.clock.schedule_interval(update_network, 1.)
+pg.clock.schedule_once(update_network, 0.)
 if not DEV:
     GPIO.add_event_detect("GPIO3", GPIO.FALLING, open_sesame)
 
