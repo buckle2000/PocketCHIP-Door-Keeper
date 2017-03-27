@@ -15,7 +15,7 @@ else:
     GPIO.setup("GPIO6", GPIO.OUT)
 # IPython.embed()
 
-window = pg.window.Window()
+window = pg.window.Window(fullscreen=True)
 
 str_resolution = str(window.width)+'x'+str(window.height)
 label_resolution = pg.text.Label(str_resolution)
