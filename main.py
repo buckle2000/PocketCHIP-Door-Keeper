@@ -3,7 +3,8 @@ import atexit
 import pyglet as pg
 from requests_futures.sessions import FuturesSession
 
-
+PIN_BUTTON = "GPIO3"
+PIN_RELAY  = "GPIO6"
 DEV = sys.platform == 'win32'
 
 if DEV:
@@ -20,8 +21,8 @@ def atexit_callback():
 atexit.register(atexit_callback)
 
 if not DEV:
-    GPIO.setup("GPIO3", GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.setup("GPIO6", GPIO.OUT)
+    GPIO.setup(PIN_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(PIN_RELAY, GPIO.OUT)
 
 # IPython.embed()
 
@@ -32,6 +33,8 @@ window = pg.window.Window(fullscreen=not DEV)
 str_resolution = str(window.width)+'x'+str(window.height)
 label_resolution = pg.text.Label(str_resolution)
 print("Resolution:", str_resolution)
+print("PIN_BUTTON:", PIN_BUTTON)
+print("PIN_RELAY:", PIN_RELAY)
 
 label_info = pg.text.Label('Loading')
 label_info.width = window.width
