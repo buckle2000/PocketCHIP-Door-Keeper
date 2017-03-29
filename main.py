@@ -2,6 +2,7 @@ import sys
 import atexit
 import pyglet as pg
 from requests_futures.sessions import FuturesSession
+import fancy as fancy_demo
 
 PIN_BUTTON = "GPIO3"
 PIN_RELAY  = "GPIO6"
@@ -28,7 +29,10 @@ if not DEV:
 
 requests_session = FuturesSession()
 
-window = pg.window.Window(fullscreen=not DEV)
+if DEV:
+    window = pg.window.Window(width=480, height=272) # simlulate pocketCHIP
+else:
+    window = pg.window.Window(fullscreen=True)
 
 str_resolution = str(window.width)+'x'+str(window.height)
 label_resolution = pg.text.Label(str_resolution)
@@ -51,6 +55,7 @@ str_network = "Connecting..."
 @window.event
 def on_draw():
     window.clear()
+    fancy_demo.draw()
     label_info.draw()
     label_resolution.draw()
 
@@ -59,6 +64,7 @@ def update(dt):
     if not DEV and not GPIO.input("GPIO3"):
         str_btndown = "Yes"
     label_info.text = str_format.format(door=str_door, network=str_network, btndown=str_btndown)
+    fancy_demo.update(dt)
 
 def network_callback(sess,resp):
     global str_network
@@ -83,7 +89,9 @@ def open_sesame(*args):
     pg.clock.unschedule(close_sesame)
     if not DEV:
         GPIO.output("GPIO6", GPIO.HIGH)
-    str_door = "opening"
+    if str_door != "opening":
+        str_door = "opening"
+        fancy_demo.open()
     pg.clock.schedule_once(close_sesame, 1.) # supply current for 1s
     
 def close_sesame(*args):
@@ -91,11 +99,19 @@ def close_sesame(*args):
     str_door = "closing"
     if not DEV:
         GPIO.output("GPIO6", GPIO.LOW)
+    fancy_demo.close()
+
+@window.event
+def on_key_press(symbol, modifiers):
+    if symbol == pg.window.key.O:
+        open_sesame()
 
 pg.clock.set_fps_limit(60)
 pg.clock.schedule(update)
 pg.clock.schedule_once(update_network, 0.)
 if not DEV:
     GPIO.add_event_detect("GPIO3", GPIO.FALLING, open_sesame)
+
+fancy_demo.init(window)
 
 pg.app.run()
