@@ -8,6 +8,8 @@ PIN_BUTTON = "GPIO3"
 PIN_RELAY  = "GPIO6"
 DEV = sys.platform == 'win32'
 
+cooldown = 0.
+
 if DEV:
     try:
         import IPython
@@ -45,7 +47,7 @@ label_info.width = window.width
 label_info.multiline = True
 label_info.y = window.height - label_info.content_height
 
-str_format = "Door: {door}\nNetwork: {network}"
+str_format = "Door: {door}\nNetwork: {network}\nCD: {cooldown:.1f}"
 if not DEV:
     str_format += "\nButton down: {btndown}"
 
@@ -60,10 +62,14 @@ def on_draw():
     label_resolution.draw()
 
 def update(dt):
+    global cooldown
+    cooldown -= dt
+    if cooldown < 0.:
+        cooldown = 0.
     str_btndown = "No"
     if not DEV and not GPIO.input("GPIO3"):
         str_btndown = "Yes"
-    label_info.text = str_format.format(door=str_door, network=str_network, btndown=str_btndown)
+    label_info.text = str_format.format(door=str_door, network=str_network, btndown=str_btndown, cooldown=cooldown)
     fancy_demo.update(dt)
 
 def network_callback(sess,resp):
@@ -85,6 +91,11 @@ def update_network(dt):
     requests_session.get('http://pacific-harbor-49025.herokuapp.com/delete/arduino', background_callback=network_callback)
 
 def open_sesame(*args):
+    global cooldown
+    if cooldown == 0.:
+        cooldown = 3
+    else:
+        return
     global str_door
     pg.clock.unschedule(close_sesame)
     if not DEV:
@@ -105,6 +116,10 @@ def close_sesame(*args):
 def on_key_press(symbol, modifiers):
     if symbol == pg.window.key.O:
         open_sesame()
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    open_sesame()
 
 pg.clock.set_fps_limit(60)
 pg.clock.schedule(update)
