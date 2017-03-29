@@ -26,6 +26,7 @@ atexit.register(atexit_callback)
 if not DEV:
     GPIO.setup(PIN_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(PIN_RELAY, GPIO.OUT)
+    print("Init GPIO")
 
 # IPython.embed()
 
@@ -67,7 +68,7 @@ def update(dt):
     if cooldown < 0.:
         cooldown = 0.
     str_btndown = "No"
-    if not DEV and not GPIO.input("GPIO3"):
+    if not DEV and not GPIO.input(PIN_BUTTON):
         str_btndown = "Yes"
     label_info.text = str_format.format(door=str_door, network=str_network, btndown=str_btndown, cooldown=cooldown)
     fancy_demo.update(dt)
@@ -99,7 +100,7 @@ def open_sesame(*args):
     global str_door
     pg.clock.unschedule(close_sesame)
     if not DEV:
-        GPIO.output("GPIO6", GPIO.HIGH)
+        GPIO.output(PIN_RELAY, GPIO.HIGH)
     if str_door != "opening":
         str_door = "opening"
         fancy_demo.open()
@@ -109,7 +110,7 @@ def close_sesame(*args):
     global str_door
     str_door = "closing"
     if not DEV:
-        GPIO.output("GPIO6", GPIO.LOW)
+        GPIO.output(PIN_RELAY, GPIO.LOW)
     fancy_demo.close()
 
 @window.event
@@ -125,7 +126,7 @@ pg.clock.set_fps_limit(60)
 pg.clock.schedule(update)
 pg.clock.schedule_once(update_network, 0.)
 if not DEV:
-    GPIO.add_event_detect("GPIO3", GPIO.FALLING, open_sesame)
+    GPIO.add_event_detect(PIN_BUTTON, GPIO.FALLING, open_sesame)
 
 fancy_demo.init(window)
 
