@@ -100,7 +100,7 @@ def open_sesame(*args):
     global str_door
     pg.clock.unschedule(close_sesame)
     if not DEV:
-        GPIO.output(PIN_RELAY, GPIO.HIGH)
+        GPIO.output(PIN_RELAY, GPIO.LOW)
     if str_door != "opening":
         str_door = "opening"
         fancy_demo.open()
@@ -110,7 +110,7 @@ def close_sesame(*args):
     global str_door
     str_door = "closing"
     if not DEV:
-        GPIO.output(PIN_RELAY, GPIO.LOW)
+        GPIO.output(PIN_RELAY, GPIO.HIGH)
     fancy_demo.close()
 
 @window.event
